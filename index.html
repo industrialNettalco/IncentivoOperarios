@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#4318FF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Incentivos | Mi Sector</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #4318FF; --primary-light: #868CFF; --success: #05CD99;
+            --warning: #FFB547; --danger: #EE5D50; --dark: #1B2559;
+            --gray: #A3AED0; --light: #F4F7FE; --white: #FFFFFF;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; padding: 0.75rem; color: var(--dark);
+        }
+        .container { max-width: 420px; margin: 0 auto; }
+        .header { text-align: center; padding: 1rem 0; color: white; }
+        .header h1 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.2rem; }
+        .header .semana { font-size: 0.85rem; opacity: 0.9; }
+        .header .actualizado { font-size: 0.7rem; opacity: 0.7; margin-top: 0.3rem; }
+
+        /* Selector de semanas */
+        .week-selector {
+            display: flex; justify-content: center; gap: 0.5rem;
+            margin-top: 0.75rem; flex-wrap: wrap;
+        }
+        .week-btn {
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+            color: white; padding: 0.4rem 0.75rem; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .week-btn:hover { background: rgba(255,255,255,0.3); }
+        .week-btn.active {
+            background: white; color: var(--primary); border-color: white;
+        }
+        .week-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .main-card {
+            background: white; border-radius: 20px; padding: 1.25rem;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.25); margin-bottom: 0.75rem;
+        }
+        .sector-header {
+            display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;
+            padding-bottom: 0.75rem; border-bottom: 2px solid var(--light);
+        }
+        .sector-icon {
+            width: 44px; height: 44px; border-radius: 12px; display: flex;
+            align-items: center; justify-content: center; font-size: 1.1rem;
+            color: white; flex-shrink: 0;
+        }
+        .sector-info h2 { font-size: 1rem; font-weight: 700; color: var(--dark); }
+        .sector-info .tendencia {
+            display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.7rem;
+            margin-top: 0.25rem; padding: 0.15rem 0.5rem; border-radius: 15px; font-weight: 600;
+        }
+        .tendencia.up { background: rgba(5, 205, 153, 0.15); color: var(--success); }
+        .tendencia.down { background: rgba(238, 93, 80, 0.15); color: var(--danger); }
+        .tendencia.stable { background: rgba(163, 174, 208, 0.15); color: var(--gray); }
+
+        /* Incentivo Principal */
+        .incentivo-principal { text-align: center; padding: 1rem 0; }
+        .incentivo-label {
+            font-size: 0.7rem; color: var(--gray); text-transform: uppercase;
+            letter-spacing: 1px; font-weight: 600; margin-bottom: 0.3rem;
+        }
+        .incentivo-valor {
+            font-size: 3rem; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .incentivo-valor.high {
+            background: linear-gradient(135deg, var(--success) 0%, #00b386 100%);
+            -webkit-background-clip: text; background-clip: text;
+        }
+        .incentivo-valor.medium {
+            background: linear-gradient(135deg, var(--warning) 0%, #ff9500 100%);
+            -webkit-background-clip: text; background-clip: text;
+        }
+        .incentivo-valor.low {
+            background: linear-gradient(135deg, var(--danger) 0%, #ff4444 100%);
+            -webkit-background-clip: text; background-clip: text;
+        }
+
+        /* Meta info */
+        .meta-info {
+            display: flex; justify-content: center; gap: 1.5rem; margin-top: 0.75rem;
+            padding: 0.6rem; background: var(--light); border-radius: 10px;
+        }
+        .meta-item { text-align: center; }
+        .meta-item .value { font-size: 1rem; font-weight: 700; color: var(--dark); }
+        .meta-item .label { font-size: 0.6rem; color: var(--gray); text-transform: uppercase; }
+
+        /* Calendario semanal - Cards mobile moderno */
+        .calendario-section { margin-top: 1.25rem; }
+        .calendario-title {
+            font-size: 0.85rem; font-weight: 700; color: var(--dark);
+            margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .calendario-title i { color: var(--primary); font-size: 1rem; }
+        .calendario-grid {
+            display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+        }
+        .dia-card {
+            background: white; border-radius: 10px; padding: 0.4rem 0.25rem;
+            text-align: center; border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .dia-card.con-incentivo { border-color: var(--success); background: #f0fdf4; }
+        .dia-card.sin-incentivo { border-color: #fca5a5; background: #fef2f2; }
+        .dia-card.sin-datos { background: #f8fafc; opacity: 0.6; }
+        .dia-nombre {
+            font-size: 0.6rem; font-weight: 700; color: var(--gray);
+            text-transform: uppercase; margin-bottom: 0.25rem;
+        }
+        .dia-produccion {
+            font-size: 0.7rem; font-weight: 700; color: var(--dark);
+            line-height: 1.2; margin-bottom: 0.15rem;
+        }
+        .dia-incentivo {
+            font-size: 0.75rem; font-weight: 800; padding: 0.15rem 0;
+            border-radius: 4px; margin: 0.2rem 0;
+        }
+        .dia-incentivo.positivo { background: #dcfce7; color: #166534; }
+        .dia-incentivo.cero { background: #fee2e2; color: #dc2626; }
+        .dia-faltante {
+            font-size: 0.55rem; color: #ea580c; font-weight: 600;
+            background: #fff7ed; padding: 0.1rem 0.2rem; border-radius: 3px;
+        }
+        .dia-faltante.ok { color: var(--success); background: #f0fdf4; }
+
+        /* Objetivo diario */
+        .objetivo-diario {
+            margin-top: 1rem; padding: 0.8rem; background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-radius: 12px; border-left: 4px solid var(--primary);
+            display: flex; align-items: center; gap: 0.75rem;
+        }
+        .objetivo-diario i { font-size: 1.5rem; color: var(--primary); }
+        .objetivo-diario .info { flex: 1; }
+        .objetivo-diario .label { font-size: 0.65rem; color: var(--gray); text-transform: uppercase; }
+        .objetivo-diario .value { font-size: 1.3rem; font-weight: 700; color: var(--dark); }
+
+        /* Footer */
+        .footer { text-align: center; padding: 1rem 0; color: white; opacity: 0.7; font-size: 0.65rem; }
+
+        /* Loading y Error */
+        .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 50vh; color: white; }
+        .loading i { font-size: 2.5rem; margin-bottom: 0.75rem; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error-card { background: white; border-radius: 20px; padding: 1.5rem; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.25); }
+        .error-card i { font-size: 2.5rem; color: var(--danger); margin-bottom: 0.75rem; }
+        .error-card h2 { color: var(--dark); margin-bottom: 0.4rem; font-size: 1.1rem; }
+        .error-card p { color: var(--gray); font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="loading">
+            <i class="fas fa-circle-notch"></i>
+            <p>Cargando datos...</p>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://kymyttmmfnyrifcvcxsi.supabase.co';
+        const BUCKET = 'incentivos';
+        const DIAS_SEMANA = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+
+        // Estado global - datos cargados una sola vez
+        let datosCompletos = null;  // Contiene sector info + historico de 3 semanas
+        let semanaSeleccionada = null;
+
+        function getSectorFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('sector');
+        }
+
+        async function loadSectorData(sectorSlug) {
+            try {
+                const url = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/sector-${sectorSlug}.json`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Sector no encontrado');
+                return await response.json();
+            } catch (error) {
+                console.error('Error:', error);
+                return null;
+            }
+        }
+
+        function getDatosSemana(semana) {
+            // Buscar datos de la semana en el histórico
+            if (!datosCompletos || !datosCompletos.historico) return null;
+            return datosCompletos.historico.find(h => h.semana === semana);
+        }
+
+        function getIncentivoClass(valor) {
+            if (valor >= 15) return 'high';
+            if (valor >= 7) return 'medium';
+            return 'low';
+        }
+
+        function formatNumber(num, useK = false) {
+            if (!num && num !== 0) return '-';
+            if (useK && num >= 10000) return (num / 1000).toFixed(1) + 'k';
+            return typeof num === 'number' ? num.toLocaleString('es-PE', {maximumFractionDigits: 0}) : num;
+        }
+
+        function formatProduccion(num, unidad) {
+            if (!num && num !== 0) return '-';
+            if (unidad && unidad.includes('%')) return num.toFixed(1);
+            return num.toLocaleString('es-PE', {maximumFractionDigits: 0});
+        }
+
+        function getDayOfWeek(dateStr) {
+            const date = new Date(dateStr + 'T00:00:00');
+            const day = date.getDay();
+            return day === 0 ? 6 : day - 1;
+        }
+
+        function renderCalendario(produccion_diaria, unidad, objetivo_diario) {
+            if (!produccion_diaria || produccion_diaria.length === 0) {
+                return '<p style="text-align:center;color:var(--gray);font-size:0.8rem;padding:1rem;">Sin datos</p>';
+            }
+
+            const dias = Array(7).fill(null);
+            produccion_diaria.forEach(dia => {
+                const idx = getDayOfWeek(dia.fecha);
+                dias[idx] = dia;
+            });
+
+            const esRendimiento = unidad && unidad.includes('%');
+
+            let html = '<div class="calendario-grid">';
+
+            DIAS_SEMANA.forEach((nombre, idx) => {
+                const dia = dias[idx];
+                if (dia) {
+                    const inc = dia.porcentaje_incentivo || 0;
+                    const prod = dia.produccion || 0;
+                    const obj = dia.objetivo || objetivo_diario || (esRendimiento ? 100 : 0);
+                    const faltante = obj > prod ? (obj - prod) : 0;
+                    const cardClass = inc > 0 ? 'con-incentivo' : 'sin-incentivo';
+                    const incClass = inc > 0 ? 'positivo' : 'cero';
+                    const faltaClass = faltante === 0 ? 'ok' : '';
+
+                    html += `
+                        <div class="dia-card ${cardClass}">
+                            <div class="dia-nombre">${nombre}</div>
+                            <div class="dia-produccion">${formatProduccion(prod, unidad)}</div>
+                            <div class="dia-incentivo ${incClass}">${inc.toFixed(1)}%</div>
+                            <div class="dia-faltante ${faltaClass}">${faltante > 0 ? '-' + formatProduccion(faltante, unidad) : 'OK'}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="dia-card sin-datos">
+                            <div class="dia-nombre">${nombre}</div>
+                            <div class="dia-produccion">-</div>
+                            <div class="dia-incentivo cero">-</div>
+                            <div class="dia-faltante">-</div>
+                        </div>
+                    `;
+                }
+            });
+
+            html += '</div>';
+            return html;
+        }
+
+        function renderWeekSelector() {
+            if (!datosCompletos || !datosCompletos.historico || datosCompletos.historico.length === 0) return '';
+
+            // Siempre mostrar el selector si hay al menos 1 semana
+            return `
+                <div class="week-selector">
+                    ${datosCompletos.historico.map(h => `
+                        <button class="week-btn ${h.semana === semanaSeleccionada ? 'active' : ''}"
+                                onclick="cambiarSemana('${h.semana}')">
+                            Sem ${h.semana.split('-')[1]}
+                        </button>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function cambiarSemana(semana) {
+            if (semana === semanaSeleccionada) return;
+
+            semanaSeleccionada = semana;
+            renderPage();
+        }
+
+        function renderPage() {
+            if (!datosCompletos) return;
+
+            const app = document.getElementById('app');
+            const sectorInfo = datosCompletos.sector;
+            const datosSemana = getDatosSemana(semanaSeleccionada);
+
+            if (!datosSemana) {
+                showError('No hay datos para esta semana.');
+                return;
+            }
+
+            const tendenciaIcon = datosSemana.tendencia === 'up' ? 'fa-arrow-up' : datosSemana.tendencia === 'down' ? 'fa-arrow-down' : 'fa-minus';
+            const tendenciaText = datosSemana.tendencia === 'up' ? 'Subiendo' : datosSemana.tendencia === 'down' ? 'Bajando' : 'Estable';
+
+            const diasConIncentivo = datosSemana.produccion_diaria?.filter(d => d.porcentaje_incentivo > 0).length || 0;
+            const totalDias = datosSemana.produccion_diaria?.length || 0;
+
+            app.innerHTML = `
+                <div class="header">
+                    <h1><i class="fas fa-chart-line"></i> Incentivos</h1>
+                    <div class="semana">Semana ${datosSemana.semana}</div>
+                    ${renderWeekSelector()}
+                    <div class="actualizado">Act: ${datosCompletos.actualizado}</div>
+                </div>
+
+                <div class="main-card">
+                    <div class="sector-header">
+                        <div class="sector-icon" style="background: ${sectorInfo.color}">
+                            <i class="fas ${sectorInfo.icon}"></i>
+                        </div>
+                        <div class="sector-info">
+                            <h2>${sectorInfo.nombre}</h2>
+                            <span class="tendencia ${datosSemana.tendencia}">
+                                <i class="fas ${tendenciaIcon}"></i>
+                                ${tendenciaText}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="incentivo-principal">
+                        <div class="incentivo-label">Incentivo Promedio</div>
+                        <div class="incentivo-valor ${getIncentivoClass(datosSemana.promedio)}">${datosSemana.promedio.toFixed(1)}%</div>
+                        <div class="meta-info">
+                            <div class="meta-item">
+                                <div class="value">${diasConIncentivo}/${totalDias}</div>
+                                <div class="label">Días c/Inc</div>
+                            </div>
+                            <div class="meta-item">
+                                <div class="value">${datosSemana.maxIncentivo?.toFixed(1) || 0}%</div>
+                                <div class="label">Máx Inc</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="calendario-section">
+                        <div class="calendario-title">
+                            <i class="fas fa-calendar-week"></i>
+                            Detalle Semanal
+                        </div>
+                        ${renderCalendario(datosSemana.produccion_diaria, sectorInfo.unidad, datosSemana.objetivo_diario)}
+                    </div>
+
+                    ${datosSemana.objetivo_diario ? `
+                    <div class="objetivo-diario">
+                        <i class="fas fa-bullseye"></i>
+                        <div class="info">
+                            <div class="label">Objetivo Diario</div>
+                            <div class="value">${datosSemana.objetivo_diario.toLocaleString('es-PE')} ${sectorInfo.unidad || ''}</div>
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="footer">
+                    <p>Sistema de Incentivos - Nettalco</p>
+                </div>
+            `;
+
+            document.title = `Incentivos | ${sectorInfo.nombre}`;
+        }
+
+        function showError(message) {
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="header">
+                    <h1><i class="fas fa-chart-line"></i> Incentivos</h1>
+                </div>
+                <div class="error-card">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <h2>Error</h2>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        async function init() {
+            const sectorSlug = getSectorFromURL();
+            if (!sectorSlug) {
+                showError('No se especificó un sector. Escanea el código QR de tu área.');
+                return;
+            }
+
+            // Cargar datos del sector (incluye histórico de 3 semanas)
+            datosCompletos = await loadSectorData(sectorSlug);
+
+            if (!datosCompletos) {
+                showError('No se encontraron datos para este sector.');
+                return;
+            }
+
+            // Compatibilidad con formato antiguo (sin histórico)
+            if (!datosCompletos.historico && datosCompletos.sector) {
+                // Formato antiguo: convertir a nuevo formato
+                const sectorAntiguo = datosCompletos.sector;
+                datosCompletos = {
+                    actualizado: datosCompletos.actualizado,
+                    semana_actual: datosCompletos.semana,
+                    sector: {
+                        nombre: sectorAntiguo.nombre,
+                        unidad: sectorAntiguo.unidad,
+                        color: sectorAntiguo.color,
+                        icon: sectorAntiguo.icon
+                    },
+                    historico: [{
+                        semana: datosCompletos.semana,
+                        promedio: sectorAntiguo.promedio,
+                        cumplimiento: sectorAntiguo.cumplimiento,
+                        objetivo: sectorAntiguo.objetivo,
+                        objetivo_diario: sectorAntiguo.objetivo_diario,
+                        resultado: sectorAntiguo.resultado,
+                        estado: sectorAntiguo.estado,
+                        diasConIncentivo: sectorAntiguo.diasConIncentivo,
+                        maxIncentivo: sectorAntiguo.maxIncentivo,
+                        tendencia: sectorAntiguo.tendencia,
+                        produccion_diaria: sectorAntiguo.produccion_diaria,
+                        incentivos_diarios: sectorAntiguo.incentivos_diarios
+                    }]
+                };
+            }
+
+            // Seleccionar la semana más reciente por defecto
+            if (datosCompletos.historico && datosCompletos.historico.length > 0) {
+                semanaSeleccionada = datosCompletos.historico[0].semana;
+            }
+
+            renderPage();
+        }
+
+        init();
+    </script>
+</body>
+</html>
